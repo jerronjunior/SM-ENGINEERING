@@ -26,7 +26,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <img src="/logo.svg" alt="SM Engineering" className="h-12 w-auto" />
+              <img src="/logo.png" alt="SM Engineering" className="h-12 w-auto" />
               <div>
                 <p className="text-xs font-semibold text-gray-400">SM</p>
                 <p className="text-sm font-bold text-white">ENGINEERING</p>

@@ -24,7 +24,7 @@ export default function Navbar() {
     >
       <nav className="container mx-auto px-4 flex items-center justify-between h-16 md:h-18">
         <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition">
-          <img src="/logo.svg" alt="SM Engineering" className="h-12 w-auto" />
+          <img src="/logo.png" alt="SM Engineering" className="h-12 w-auto" />
           <div className="hidden sm:block">
             <p className="text-xs font-semibold text-gray-400">SM</p>
             <p className="text-sm font-bold text-white">ENGINEERING</p>

@@ -50,7 +50,7 @@ export default function About() {
               viewport={{ once: true }}
               className="flex justify-center"
             >
-              <img src="/logo.svg" alt="SM Engineering Logo" className="h-48 w-auto drop-shadow-[0_0_40px_rgba(34,197,94,0.25)]" />
+              <img src="/logo.png" alt="SM Engineering Logo" className="h-48 w-auto drop-shadow-[0_0_40px_rgba(34,197,94,0.25)]" />
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}

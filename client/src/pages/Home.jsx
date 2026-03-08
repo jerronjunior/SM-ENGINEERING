@@ -38,7 +38,7 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="flex justify-center mb-8"
           >
-            <img src="/logo.svg" alt="SM Engineering Logo" className="h-32 w-auto drop-shadow-[0_0_30px_rgba(34,197,94,0.2)]" />
+            <img src="/logo.png" alt="SM Engineering Logo" className="h-32 w-auto drop-shadow-[0_0_30px_rgba(34,197,94,0.2)]" />
           </motion.div>
           <motion.span
             initial={{ opacity: 0, y: 20 }}
