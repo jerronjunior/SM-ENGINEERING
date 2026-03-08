@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { HiOutlinePhotograph } from 'react-icons/hi'
 import { api } from '../api/client'
 import SectionHeading from '../components/SectionHeading'
+import { FALLBACK_PROJECTS } from '../config/constants'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
@@ -19,12 +20,56 @@ export default function Projects() {
       .finally(() => setLoading(false))
   }, [])
 
-  const filtered = filter === 'all'
-    ? projects
-    : projects.filter((p) => (p.type || p.status) === filter || p.status === filter)
+  const safeProjects = projects.length > 0 ? projects : FALLBACK_PROJECTS
 
-  const upcoming = projects.filter((p) => p.status === 'upcoming')
-  const completed = projects.filter((p) => p.status === 'completed' || !p.status)
+  const normalizeStatus = (project) => {
+    if (project.status === 'completed' || project.status === 'ongoing' || project.status === 'upcoming') {
+      return project.status
+    }
+    return 'completed'
+  }
+
+  const filtered = filter === 'all'
+    ? safeProjects
+    : safeProjects.filter((p) => normalizeStatus(p) === filter)
+
+  const completed = filtered.filter((p) => normalizeStatus(p) === 'completed')
+  const ongoing = filtered.filter((p) => normalizeStatus(p) === 'ongoing')
+  const upcoming = filtered.filter((p) => normalizeStatus(p) === 'upcoming')
+
+  const imageSrc = (project) => {
+    const firstImage = project.images?.[0]
+    if (!firstImage) return null
+    if (firstImage.startsWith('http') || firstImage.startsWith('/projects/')) return firstImage
+    return API_BASE + firstImage
+  }
+
+  const categoryMeta = {
+    completed: {
+      title: 'Completed Projects',
+      borderClass: 'border-l-emerald-500',
+      badgeClass: 'bg-emerald-600/90',
+      badgeLabel: 'Completed',
+    },
+    ongoing: {
+      title: 'Ongoing Projects',
+      borderClass: 'border-l-sky-500',
+      badgeClass: 'bg-sky-600/90',
+      badgeLabel: 'Ongoing',
+    },
+    upcoming: {
+      title: 'Upcoming Projects',
+      borderClass: 'border-l-amber-500',
+      badgeClass: 'bg-amber-600/90',
+      badgeLabel: 'Upcoming',
+    },
+  }
+
+  const sections = [
+    { key: 'completed', items: completed },
+    { key: 'ongoing', items: ongoing },
+    { key: 'upcoming', items: upcoming },
+  ]
 
   return (
     <>
@@ -64,7 +109,7 @@ export default function Projects() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap gap-2 mb-10">
-            {['all', 'completed', 'upcoming', 'residential', 'commercial'].map((f) => (
+            {['all', 'completed', 'ongoing', 'upcoming'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -93,68 +138,58 @@ export default function Projects() {
               <p className="text-gray-400">No projects to show yet. Check back soon.</p>
             </motion.div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((project, i) => (
-                <motion.div
-                  key={project.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="group rounded-2xl overflow-hidden section-card"
-                >
-                  <div className="aspect-video bg-brand-blue-light relative overflow-hidden">
-                    {project.images?.length > 0 ? (
-                      <img
-                        src={API_BASE + project.images[0]}
-                        alt={project.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-500 bg-brand-blue/50">
-                        <HiOutlinePhotograph size={48} />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-brand-blue via-transparent to-transparent opacity-60" />
-                    {project.beforeAfter && (
-                      <span className="absolute top-3 left-3 px-3 py-1 rounded-lg bg-brand-green/90 text-white text-xs font-medium">Before/After</span>
-                    )}
-                    {project.status === 'upcoming' && (
-                      <span className="absolute top-3 right-3 px-3 py-1 rounded-lg bg-amber-600/90 text-white text-xs font-medium">Upcoming</span>
-                    )}
+            <div className="space-y-14">
+              {sections.map(({ key, items }) => {
+                if (items.length === 0) return null
+                const meta = categoryMeta[key]
+
+                return (
+                  <div key={key}>
+                    <SectionHeading title={meta.title} />
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {items.map((project, i) => (
+                        <motion.div
+                          key={project.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          className={`group rounded-2xl overflow-hidden section-card border-l-4 ${meta.borderClass}`}
+                        >
+                          <div className="aspect-video bg-brand-blue-light relative overflow-hidden">
+                            {imageSrc(project) ? (
+                              <img
+                                src={imageSrc(project)}
+                                alt={project.title}
+                                className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-500 bg-brand-blue/50">
+                                <HiOutlinePhotograph size={48} />
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-brand-blue via-transparent to-transparent opacity-60" />
+                            {project.beforeAfter && (
+                              <span className="absolute top-3 left-3 px-3 py-1 rounded-lg bg-brand-green/90 text-white text-xs font-medium">Before/After</span>
+                            )}
+                            <span className={`absolute top-3 right-3 px-3 py-1 rounded-lg text-white text-xs font-medium ${meta.badgeClass}`}>
+                              {meta.badgeLabel}
+                            </span>
+                          </div>
+                          <div className="p-5">
+                            <h3 className="text-lg font-semibold text-white mb-1">{project.title}</h3>
+                            <p className="text-gray-400 text-sm line-clamp-2">{project.description}</p>
+                            <p className="text-brand-green-accent text-xs mt-2 capitalize font-medium">{project.type || 'Project'}</p>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="p-5">
-                    <h3 className="text-lg font-semibold text-white mb-1">{project.title}</h3>
-                    <p className="text-gray-400 text-sm line-clamp-2">{project.description}</p>
-                    <p className="text-brand-green-accent text-xs mt-2 capitalize font-medium">{project.type || project.status || 'Project'}</p>
-                  </div>
-                </motion.div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
       </section>
-
-      {upcoming.length > 0 && (
-        <section className="py-16 bg-brand-blue/50">
-          <div className="container mx-auto px-4">
-            <SectionHeading title="Upcoming Projects" />
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {upcoming.map((p) => (
-                <motion.div
-                  key={p.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  className="p-6 rounded-2xl section-card border-l-4 border-l-amber-500"
-                >
-                  <h3 className="font-semibold text-white">{p.title}</h3>
-                  <p className="text-gray-400 text-sm mt-1">{p.description}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
     </>
   )
 }
