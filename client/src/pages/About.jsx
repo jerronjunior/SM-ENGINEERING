@@ -43,19 +43,29 @@ export default function About() {
       <section className="py-24 bg-brand-blue/20">
         <div className="container mx-auto px-4">
           <SectionHeading title="Company Introduction" />
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-3xl mx-auto p-8 md:p-10 rounded-2xl section-card"
-          >
-            <p className="text-lg text-gray-300 mb-4 leading-relaxed">
-              <strong className="text-white">{COMPANY.name}</strong> is an engineering and construction company based in Passara, Sri Lanka. We were founded on {COMPANY.founded} and specialize in house planning, design, cost estimation, structural drawings, approval drawings, and material details.
-            </p>
-            <p className="text-gray-400 leading-relaxed">
-              We serve <strong className="text-white">house owners</strong> and <strong className="text-white">companies</strong> with residential and commercial projects. Every project comes with our <strong className="text-brand-green-accent">{COMPANY.warranty}</strong>, and we offer <strong className="text-brand-green-accent">free quotations</strong> for all clients.
-            </p>
-          </motion.div>
+          <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 items-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="flex justify-center"
+            >
+              <img src="/logo.svg" alt="SM Engineering Logo" className="h-48 w-auto drop-shadow-[0_0_40px_rgba(34,197,94,0.25)]" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="p-8 md:p-10 rounded-2xl section-card"
+            >
+              <p className="text-lg text-gray-300 mb-4 leading-relaxed">
+                <strong className="text-white">{COMPANY.name}</strong> is an engineering and construction company based in Passara, Sri Lanka. We were founded on {COMPANY.founded} and specialize in house planning, design, cost estimation, structural drawings, approval drawings, and material details.
+              </p>
+              <p className="text-gray-400 leading-relaxed">
+                We serve <strong className="text-white">house owners</strong> and <strong className="text-white">companies</strong> with residential and commercial projects. Every project comes with our <strong className="text-brand-green-accent">{COMPANY.warranty}</strong>, and we offer <strong className="text-brand-green-accent">free quotations</strong> for all clients.
+              </p>
+            </motion.div>
+          </div>
         </div>
       </section>
 

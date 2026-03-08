@@ -23,8 +23,12 @@ export default function Navbar() {
       className="sticky top-0 z-50 bg-brand-blue/90 backdrop-blur-md border-b border-brand-green/20 shadow-lg shadow-black/20"
     >
       <nav className="container mx-auto px-4 flex items-center justify-between h-16 md:h-18">
-        <Link to="/" className="text-lg md:text-xl font-bold text-white tracking-tight">
-          SM <span className="text-brand-green-accent">ENGINEERING</span>
+        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition">
+          <img src="/logo.svg" alt="SM Engineering" className="h-12 w-auto" />
+          <div className="hidden sm:block">
+            <p className="text-xs font-semibold text-gray-400">SM</p>
+            <p className="text-sm font-bold text-white">ENGINEERING</p>
+          </div>
         </Link>
 
         <ul className="hidden md:flex items-center gap-6">

@@ -32,6 +32,14 @@ export default function Home() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(34,197,94,0.15),transparent)]" />
         <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-40" style={{ backgroundSize: '64px 64px' }} />
         <div className="container mx-auto px-4 relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6 }}
+            className="flex justify-center mb-8"
+          >
+            <img src="/logo.svg" alt="SM Engineering Logo" className="h-32 w-auto drop-shadow-[0_0_30px_rgba(34,197,94,0.2)]" />
+          </motion.div>
           <motion.span
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

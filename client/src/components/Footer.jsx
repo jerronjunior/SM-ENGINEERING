@@ -25,9 +25,13 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-12 md:py-16 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-bold text-white mb-4">
-              SM <span className="text-brand-green-accent">ENGINEERING</span>
-            </h3>
+            <div className="flex items-center gap-2 mb-4">
+              <img src="/logo.svg" alt="SM Engineering" className="h-12 w-auto" />
+              <div>
+                <p className="text-xs font-semibold text-gray-400">SM</p>
+                <p className="text-sm font-bold text-white">ENGINEERING</p>
+              </div>
+            </div>
             <p className="text-gray-400 text-sm mb-4">
               Professional engineering and construction services. House planning, design, cost estimation, and more. Free quotations.
             </p>

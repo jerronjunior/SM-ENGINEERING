@@ -1,0 +1,28 @@
+<svg width="200" height="240" viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8C547;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#D4AF37;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B7620;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- S in SM -->
+  <path d="M 30 50 Q 20 50 20 70 Q 20 85 35 85 Q 45 85 45 95 Q 45 110 30 110 Q 15 110 15 95" 
+        stroke="url(#goldGradient)" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- M in SM -->
+  <path d="M 60 50 L 60 110 M 60 50 L 75 85 L 90 50 L 90 110" 
+        stroke="url(#goldGradient)" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Circle for BUILD TECH -->
+  <circle cx="70" cy="160" r="42" stroke="url(#goldGradient)" stroke-width="10" fill="none"/>
+  
+  <!-- BUILD text -->
+  <text x="70" y="150" font-family="Arial, sans-serif" font-size="13" font-weight="bold" 
+        text-anchor="middle" fill="url(#goldGradient)" letter-spacing="2">BUILD</text>
+  
+  <!-- TECH text -->
+  <text x="70" y="170" font-family="Arial, sans-serif" font-size="13" font-weight="bold" 
+        text-anchor="middle" fill="url(#goldGradient)" letter-spacing="2">TECH</text>
+</svg>
