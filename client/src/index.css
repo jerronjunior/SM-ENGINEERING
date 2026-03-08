@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-brand-blue-dark text-gray-100 antialiased;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-brand-blue-dark;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-brand-green rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-brand-green-light;
+}
+
+/* Selection */
+::selection {
+  @apply bg-brand-green text-white;
+}
+
+/* Page section backgrounds */
+@layer components {
+  .page-hero {
+    @apply relative overflow-hidden;
+    background: linear-gradient(135deg, #020617 0%, #0f172a 40%, #0f172a 100%);
+  }
+  .page-hero::before {
+    content: '';
+    @apply absolute inset-0 bg-grid-pattern bg-grid opacity-60;
+  }
+  .section-card {
+    @apply rounded-2xl border border-brand-green/20 bg-brand-blue/80 backdrop-blur-sm shadow-card transition-all duration-300;
+  }
+  .section-card:hover {
+    @apply border-brand-green/40 shadow-card-hover;
+  }
+  .btn-primary {
+    @apply px-8 py-3.5 rounded-xl bg-brand-green text-white font-semibold shadow-lg hover:bg-brand-green-light hover:shadow-glow hover:-translate-y-0.5 transition-all duration-300;
+  }
+  .btn-secondary {
+    @apply px-8 py-3.5 rounded-xl border-2 border-brand-green text-brand-green-accent font-semibold hover:bg-brand-green/20 hover:border-brand-green-accent transition-all duration-300;
+  }
+}
