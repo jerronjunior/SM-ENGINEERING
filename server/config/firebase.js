@@ -7,18 +7,20 @@ const initFirebase = () => {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
 
-  if (!clientEmail || !privateKey) {
-    throw new Error(
-      'Firebase Admin credentials are missing. Set FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY in server/.env.'
-    )
+  if (clientEmail && privateKey) {
+    return admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
+    })
   }
 
+  console.warn('Firebase Admin service-account credentials are not set. Falling back to application default credentials.')
   return admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId,
-      clientEmail,
-      privateKey,
-    }),
+    projectId,
+    credential: admin.credential.applicationDefault(),
   })
 }
 
