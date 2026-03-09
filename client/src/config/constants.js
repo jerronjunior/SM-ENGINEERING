@@ -21,10 +21,10 @@ export const FALLBACK_PROJECTS = [
     type: 'residential',
     status: 'completed',
     images: [
-      '/projects/completed-room-1.jpg',
-      '/projects/completed-room-2.jpg',
-      '/projects/completed-room-3.jpg',
-      '/projects/completed-room-4.jpg',
+      '/projects/completed-1.jpg',
+      '/projects/completed-2.jpg',
+      '/projects/completed-3.jpg',
+      '/projects/completed-4.jpg',
     ],
   },
   {
