@@ -16,11 +16,16 @@ export const API_BASE = import.meta.env.VITE_API_URL || '/api'
 export const FALLBACK_PROJECTS = [
   {
     id: 'cp-01',
-    title: 'Hill Crest Family Residence',
-    description: 'Two-story custom home with RCC frame, exterior finishing, and full utility setup.',
+    title: 'Boutique Suite Interior Upgrade',
+    description: 'Completed premium guest-room interior package with custom joinery, warm lighting, and furniture finishing.',
     type: 'residential',
     status: 'completed',
-    images: ['/projects/completed-1.svg'],
+    images: [
+      '/projects/completed-room-1.jpg',
+      '/projects/completed-room-2.jpg',
+      '/projects/completed-room-3.jpg',
+      '/projects/completed-room-4.jpg',
+    ],
   },
   {
     id: 'cp-02',

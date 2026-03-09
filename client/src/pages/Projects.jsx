@@ -44,6 +44,13 @@ export default function Projects() {
     return API_BASE + firstImage
   }
 
+  const imageList = (project) => {
+    if (!Array.isArray(project.images)) return []
+    return project.images
+      .filter(Boolean)
+      .map((img) => (img.startsWith('http') || img.startsWith('/projects/') ? img : API_BASE + img))
+  }
+
   const categoryMeta = {
     completed: {
       title: 'Completed Projects',
@@ -156,7 +163,18 @@ export default function Projects() {
                           className={`group rounded-2xl overflow-hidden section-card border-l-4 ${meta.borderClass}`}
                         >
                           <div className="aspect-video bg-brand-blue-light relative overflow-hidden">
-                            {imageSrc(project) ? (
+                            {imageList(project).length > 1 ? (
+                              <div className="grid grid-cols-2 h-full gap-1 p-1">
+                                {imageList(project).slice(0, 4).map((img, idx) => (
+                                  <img
+                                    key={`${project.id}-${idx}`}
+                                    src={img}
+                                    alt={`${project.title} ${idx + 1}`}
+                                    className="w-full h-full object-cover rounded-md group-hover:scale-[1.02] transition duration-500"
+                                  />
+                                ))}
+                              </div>
+                            ) : imageSrc(project) ? (
                               <img
                                 src={imageSrc(project)}
                                 alt={project.title}
