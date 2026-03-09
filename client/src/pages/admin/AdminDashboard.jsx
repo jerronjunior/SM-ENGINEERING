@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { HiOutlineFolder, HiOutlineDocumentText, HiOutlineMail, HiOutlineLogout, HiOutlinePlus, HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi'
+import { HiOutlineFolder, HiOutlineDocumentText, HiOutlineMail, HiOutlineLogout, HiOutlinePencil, HiOutlineTrash, HiOutlineKey } from 'react-icons/hi'
 import { api } from '../../api/client'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
@@ -17,6 +17,15 @@ export default function AdminDashboard() {
   const [postForm, setPostForm] = useState({ title: '', excerpt: '', content: '', image: null })
   const [editingProject, setEditingProject] = useState(null)
   const [editingPost, setEditingPost] = useState(null)
+  const [credentialsForm, setCredentialsForm] = useState({
+    currentPassword: '',
+    newEmail: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+  const [credentialsMessage, setCredentialsMessage] = useState('')
+  const [credentialsError, setCredentialsError] = useState('')
+  const [updatingCredentials, setUpdatingCredentials] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken')
@@ -153,6 +162,52 @@ export default function AdminDashboard() {
     }
   }
 
+  const updateCredentials = async (e) => {
+    e.preventDefault()
+    setCredentialsError('')
+    setCredentialsMessage('')
+
+    const { currentPassword, newEmail, newPassword, confirmPassword } = credentialsForm
+    if (!newEmail && !newPassword) {
+      setCredentialsError('Enter a new email or new password.')
+      return
+    }
+
+    if (newPassword && newPassword !== confirmPassword) {
+      setCredentialsError('New password and confirm password do not match.')
+      return
+    }
+
+    setUpdatingCredentials(true)
+    try {
+      const res = await api.put('/admin/credentials', {
+        currentPassword,
+        newEmail: newEmail || undefined,
+        newPassword: newPassword || undefined,
+      })
+
+      if (res?.token) {
+        localStorage.setItem('adminToken', res.token)
+      }
+
+      setCredentialsForm({
+        currentPassword: '',
+        newEmail: '',
+        newPassword: '',
+        confirmPassword: '',
+      })
+      setCredentialsMessage('Admin credentials updated successfully.')
+    } catch (err) {
+      setCredentialsError(err.message || 'Failed to update credentials.')
+      if (err.message === 'Unauthorized') {
+        localStorage.removeItem('adminToken')
+        navigate('/admin')
+      }
+    } finally {
+      setUpdatingCredentials(false)
+    }
+  }
+
   const formatDate = (d) => (d ? new Date(d).toLocaleString() : '')
 
   if (loading && !contacts.length && !projects.length) {
@@ -181,6 +236,7 @@ export default function AdminDashboard() {
             { id: 'contacts', label: 'Messages', icon: HiOutlineMail },
             { id: 'projects', label: 'Projects', icon: HiOutlineFolder },
             { id: 'blog', label: 'Blog', icon: HiOutlineDocumentText },
+            { id: 'settings', label: 'Settings', icon: HiOutlineKey },
           ].map((t) => (
             <button
               key={t.id}
@@ -390,6 +446,60 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
+            </motion.div>
+          )}
+
+          {tab === 'settings' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 max-w-xl">
+              <h2 className="text-xl font-semibold text-white">Admin Settings</h2>
+              <form onSubmit={updateCredentials} className="p-4 rounded-xl bg-brand-blue border border-brand-green/20 space-y-3">
+                <h3 className="text-white font-medium">Change email or password</h3>
+                <p className="text-sm text-gray-400">Current password is required to save changes.</p>
+
+                <input
+                  type="password"
+                  placeholder="Current password"
+                  value={credentialsForm.currentPassword}
+                  onChange={(e) => setCredentialsForm((f) => ({ ...f, currentPassword: e.target.value }))}
+                  required
+                  className="w-full px-3 py-2 rounded-lg bg-brand-blue-dark border border-brand-green/30 text-white"
+                />
+
+                <input
+                  type="email"
+                  placeholder="New email (optional)"
+                  value={credentialsForm.newEmail}
+                  onChange={(e) => setCredentialsForm((f) => ({ ...f, newEmail: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg bg-brand-blue-dark border border-brand-green/30 text-white"
+                />
+
+                <input
+                  type="password"
+                  placeholder="New password (optional, min 6 chars)"
+                  value={credentialsForm.newPassword}
+                  onChange={(e) => setCredentialsForm((f) => ({ ...f, newPassword: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg bg-brand-blue-dark border border-brand-green/30 text-white"
+                />
+
+                <input
+                  type="password"
+                  placeholder="Confirm new password"
+                  value={credentialsForm.confirmPassword}
+                  onChange={(e) => setCredentialsForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg bg-brand-blue-dark border border-brand-green/30 text-white"
+                />
+
+                {credentialsError && <p className="text-red-400 text-sm">{credentialsError}</p>}
+                {credentialsMessage && <p className="text-brand-green-accent text-sm">{credentialsMessage}</p>}
+
+                <button
+                  type="submit"
+                  disabled={updatingCredentials}
+                  className="px-4 py-2 rounded-lg bg-brand-green text-white text-sm font-medium disabled:opacity-60"
+                >
+                  {updatingCredentials ? 'Saving...' : 'Update credentials'}
+                </button>
+              </form>
             </motion.div>
           )}
         </main>

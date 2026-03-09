@@ -1,6 +1,9 @@
 import express from 'express'
 import { db } from '../config/firebase.js'
 import crypto from 'crypto'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 const router = express.Router()
 
@@ -8,6 +11,84 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@smengconstruction.com'
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'
 const ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET || 'change-this-admin-token-secret'
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 24
+const ADMIN_SETTINGS_COLLECTION = 'settings'
+const ADMIN_SETTINGS_DOC = 'adminAuth'
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const localAuthPath = path.join(__dirname, '../config/admin-auth.json')
+
+const hashPassword = (password, salt = crypto.randomBytes(16).toString('hex')) => {
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex')
+  return `${salt}:${hash}`
+}
+
+const verifyPassword = (password, encoded) => {
+  const [salt, originalHash] = (encoded || '').split(':')
+  if (!salt || !originalHash) return false
+  const derivedHash = crypto.scryptSync(password, salt, 64).toString('hex')
+  return crypto.timingSafeEqual(Buffer.from(derivedHash, 'hex'), Buffer.from(originalHash, 'hex'))
+}
+
+const getAdminAuthConfig = async () => {
+  try {
+    const doc = await db.collection(ADMIN_SETTINGS_COLLECTION).doc(ADMIN_SETTINGS_DOC).get()
+    const data = doc.data()
+    if (doc.exists && data?.email && data?.passwordHash) {
+      return { email: data.email, passwordHash: data.passwordHash }
+    }
+  } catch (err) {
+    console.warn('Failed to load admin auth config from Firestore, using env fallback.', err?.message)
+  }
+
+  try {
+    if (fs.existsSync(localAuthPath)) {
+      const localData = JSON.parse(fs.readFileSync(localAuthPath, 'utf8'))
+      if (localData?.email && localData?.passwordHash) {
+        return { email: localData.email, passwordHash: localData.passwordHash }
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to load local admin auth config, using env fallback.', err?.message)
+  }
+
+  return { email: ADMIN_EMAIL, password: ADMIN_PASSWORD }
+}
+
+const saveAdminAuthConfig = async ({ email, passwordHash }) => {
+  try {
+    await db.collection(ADMIN_SETTINGS_COLLECTION).doc(ADMIN_SETTINGS_DOC).set(
+      {
+        email,
+        passwordHash,
+        updatedAt: new Date(),
+      },
+      { merge: true }
+    )
+    return { target: 'firestore' }
+  } catch (err) {
+    console.warn('Failed to save admin auth config to Firestore, saving locally.', err?.message)
+  }
+
+  fs.writeFileSync(
+    localAuthPath,
+    JSON.stringify(
+      {
+        email,
+        passwordHash,
+        updatedAt: new Date().toISOString(),
+      },
+      null,
+      2
+    ),
+    'utf8'
+  )
+
+  return { target: 'local-file' }
+}
+
+const matchesPassword = (password, authConfig) => {
+  if (authConfig.passwordHash) return verifyPassword(password, authConfig.passwordHash)
+  return password === authConfig.password
+}
 
 const createToken = (email) => {
   const payload = {
@@ -33,23 +114,34 @@ const parseToken = (token) => {
   return payload
 }
 
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body
-  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-    const token = createToken(email)
-    res.json({ success: true, token })
-  } else {
+
+  try {
+    const authConfig = await getAdminAuthConfig()
+    if (email === authConfig.email && matchesPassword(password, authConfig)) {
+      const token = createToken(email)
+      res.json({ success: true, token })
+      return
+    }
     res.status(401).json({ success: false, error: 'Invalid credentials' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ success: false, error: 'Failed to login' })
   }
 })
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   const auth = req.headers.authorization
   if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' })
+
   try {
     const payload = parseToken(auth.slice(7))
     if (!payload) return res.status(401).json({ error: 'Unauthorized' })
-    if (payload.email !== ADMIN_EMAIL) return res.status(401).json({ error: 'Unauthorized' })
+
+    const authConfig = await getAdminAuthConfig()
+    if (payload.email !== authConfig.email) return res.status(401).json({ error: 'Unauthorized' })
+
     req.admin = payload
     next()
   } catch {
@@ -59,6 +151,52 @@ const authMiddleware = (req, res, next) => {
 
 router.get('/verify', authMiddleware, (req, res) => {
   res.json({ success: true, email: req.admin.email })
+})
+
+router.put('/credentials', authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword, newEmail } = req.body || {}
+
+    if (!currentPassword) {
+      return res.status(400).json({ error: 'Current password is required' })
+    }
+
+    if (!newPassword && !newEmail) {
+      return res.status(400).json({ error: 'Provide a new password or new email' })
+    }
+
+    const authConfig = await getAdminAuthConfig()
+    const isCurrentPasswordValid = matchesPassword(currentPassword, authConfig)
+    if (!isCurrentPasswordValid) {
+      return res.status(401).json({ error: 'Current password is incorrect' })
+    }
+
+    if (newPassword && newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters' })
+    }
+
+    const nextEmail = (newEmail || authConfig.email).trim()
+    const nextPasswordHash = newPassword
+      ? hashPassword(newPassword)
+      : authConfig.passwordHash || hashPassword(authConfig.password)
+
+    const saveResult = await saveAdminAuthConfig({
+      email: nextEmail,
+      passwordHash: nextPasswordHash,
+    })
+
+    const token = createToken(nextEmail)
+    res.json({
+      success: true,
+      token,
+      email: nextEmail,
+      storage: saveResult.target,
+      message: 'Credentials updated successfully',
+    })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to update credentials' })
+  }
 })
 
 router.get('/contacts', authMiddleware, async (req, res) => {
