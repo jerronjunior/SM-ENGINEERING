@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import About from './pages/About'
@@ -16,6 +17,12 @@ import WhatsAppButton from './components/WhatsAppButton'
 import Chatbot from './components/Chatbot'
 
 function App() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [pathname])
+
   return (
     <>
       <Routes>

@@ -1,0 +1,11 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" fill="#111827"/>
+  <rect y="540" width="1280" height="180" fill="#1F2937"/>
+  <rect x="150" y="240" width="320" height="300" rx="10" fill="#E5E7EB"/>
+  <rect x="500" y="180" width="620" height="360" rx="10" fill="#D1D5DB"/>
+  <rect x="560" y="260" width="180" height="120" rx="8" fill="#3B82F6"/>
+  <rect x="760" y="260" width="180" height="120" rx="8" fill="#3B82F6"/>
+  <rect x="960" y="260" width="120" height="120" rx="8" fill="#2563EB"/>
+  <rect x="560" y="400" width="520" height="90" rx="8" fill="#9CA3AF"/>
+  <text x="66" y="88" fill="#F9FAFB" font-family="Verdana, sans-serif" font-size="38">Completed Project</text>
+</svg>
