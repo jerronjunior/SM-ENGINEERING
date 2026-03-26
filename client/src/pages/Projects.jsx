@@ -38,8 +38,13 @@ export default function Projects() {
   ]
 
   const upcomingGalleryImages = [
-    '/projects/Upcomming 01.jpeg',
-    '/projects/Upcomming 02.jpeg',
+    '/projects/Upcomming 03.png',
+    '/projects/Upcomming 04.png',
+  ]
+
+  const upcomingProjectFiles = [
+    '/projects/Upcomming 01.pdf',
+    '/projects/Upcomming 02.pdf',
   ]
 
   useEffect(() => {
@@ -78,6 +83,15 @@ export default function Projects() {
     return project.images
       .filter(Boolean)
       .map((img) => (img.startsWith('http') || img.startsWith('/projects/') ? img : API_BASE + img))
+  }
+
+  const previewList = (project) => {
+    if (Array.isArray(project.previewFiles) && project.previewFiles.length > 0) {
+      return project.previewFiles
+        .filter(Boolean)
+        .map((file) => (file.startsWith('http') || file.startsWith('/projects/') ? file : API_BASE + file))
+    }
+    return imageList(project)
   }
 
   const isPdf = (src) => typeof src === 'string' && src.toLowerCase().endsWith('.pdf')
@@ -256,10 +270,11 @@ export default function Projects() {
                       ? upcomingGalleryImages.map((img, idx) => ({
                         id: `upcoming-project-gallery-${idx + 1}`,
                         title: `Upcoming Project Gallery - View ${idx + 1}`,
-                        description: `Upcoming project visual ${idx + 1} of ${upcomingGalleryImages.length}.`,
+                        description: `Upcoming project file ${idx + 1} of ${upcomingGalleryImages.length}.`,
                         type: 'commercial',
                         status: 'upcoming',
                         images: [img],
+                        previewFiles: [upcomingProjectFiles[idx]],
                       }))
                   : items
 
@@ -284,7 +299,7 @@ export default function Projects() {
                                   <button
                                     key={`${project.id}-${idx}`}
                                     type="button"
-                                    onClick={() => openPreview(imageList(project), idx)}
+                                    onClick={() => openPreview(previewList(project), idx)}
                                     className="w-full h-full"
                                     aria-label={`Preview ${project.title} image ${idx + 1}`}
                                   >
@@ -299,7 +314,7 @@ export default function Projects() {
                             ) : imageSrc(project) ? (
                               <button
                                 type="button"
-                                onClick={() => openPreview(imageList(project), 0)}
+                                onClick={() => openPreview(previewList(project), 0)}
                                 className="w-full h-full"
                                 aria-label={`Preview ${project.title}`}
                               >
