@@ -12,6 +12,14 @@ export default function Projects() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [preview, setPreview] = useState({ open: false, images: [], index: 0 })
+
+  const completedGalleryImages = [
+    '/projects/Completed 1.jpeg',
+    '/projects/Completed 2.jpeg',
+    '/projects/Completed 3.jpeg',
+    '/projects/Completed 4.jpeg',
+  ]
 
   useEffect(() => {
     api.get('/projects')
@@ -78,6 +86,61 @@ export default function Projects() {
     { key: 'upcoming', items: upcoming },
   ]
 
+  const hasProjectsToShow = filtered.length > 0 || filter === 'all' || filter === 'completed'
+
+  const openPreview = (images, index = 0) => {
+    if (!images?.length) return
+    setPreview({ open: true, images, index })
+  }
+
+  const closePreview = () => {
+    setPreview({ open: false, images: [], index: 0 })
+  }
+
+  const prevPreview = () => {
+    setPreview((current) => {
+      const count = current.images.length
+      if (!count) return current
+      return { ...current, index: (current.index - 1 + count) % count }
+    })
+  }
+
+  const nextPreview = () => {
+    setPreview((current) => {
+      const count = current.images.length
+      if (!count) return current
+      return { ...current, index: (current.index + 1) % count }
+    })
+  }
+
+  useEffect(() => {
+    if (!preview.open) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        closePreview()
+        return
+      }
+      if (event.key === 'ArrowLeft') {
+        prevPreview()
+        return
+      }
+      if (event.key === 'ArrowRight') {
+        nextPreview()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [preview.open])
+
   return (
     <>
       <Helmet>
@@ -133,7 +196,7 @@ export default function Projects() {
                 <div key={i} className="h-64 rounded-xl bg-brand-blue animate-pulse" />
               ))}
             </div>
-          ) : filtered.length === 0 ? (
+          ) : !hasProjectsToShow ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -147,14 +210,25 @@ export default function Projects() {
           ) : (
             <div className="space-y-14">
               {sections.map(({ key, items }) => {
-                if (items.length === 0) return null
                 const meta = categoryMeta[key]
+                const sectionItems = key === 'completed'
+                  ? completedGalleryImages.map((img, idx) => ({
+                    id: `completed-room-gallery-${idx + 1}`,
+                    title: `Completed Room Interior Gallery - View ${idx + 1}`,
+                    description: `Completed room interior image ${idx + 1} of ${completedGalleryImages.length}.`,
+                    type: 'residential',
+                    status: 'completed',
+                    images: [img],
+                  }))
+                  : items
+
+                if (sectionItems.length === 0) return null
 
                 return (
                   <div key={key}>
                     <SectionHeading title={meta.title} />
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {items.map((project, i) => (
+                      {sectionItems.map((project, i) => (
                         <motion.div
                           key={project.id}
                           initial={{ opacity: 0, y: 20 }}
@@ -166,30 +240,44 @@ export default function Projects() {
                             {imageList(project).length > 1 ? (
                               <div className="grid grid-cols-2 h-full gap-1 p-1">
                                 {imageList(project).slice(0, 4).map((img, idx) => (
-                                  <img
+                                  <button
                                     key={`${project.id}-${idx}`}
-                                    src={img}
-                                    alt={`${project.title} ${idx + 1}`}
-                                    className="w-full h-full object-cover rounded-md group-hover:scale-[1.02] transition duration-500"
-                                  />
+                                    type="button"
+                                    onClick={() => openPreview(imageList(project), idx)}
+                                    className="w-full h-full"
+                                    aria-label={`Preview ${project.title} image ${idx + 1}`}
+                                  >
+                                    <img
+                                      src={img}
+                                      alt={`${project.title} ${idx + 1}`}
+                                      className="w-full h-full object-cover rounded-md group-hover:scale-[1.02] transition duration-500"
+                                    />
+                                  </button>
                                 ))}
                               </div>
                             ) : imageSrc(project) ? (
-                              <img
-                                src={imageSrc(project)}
-                                alt={project.title}
-                                className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-                              />
+                              <button
+                                type="button"
+                                onClick={() => openPreview(imageList(project), 0)}
+                                className="w-full h-full"
+                                aria-label={`Preview ${project.title}`}
+                              >
+                                <img
+                                  src={imageSrc(project)}
+                                  alt={project.title}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                                />
+                              </button>
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-500 bg-brand-blue/50">
                                 <HiOutlinePhotograph size={48} />
                               </div>
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-brand-blue via-transparent to-transparent opacity-60" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-brand-blue via-transparent to-transparent opacity-60 pointer-events-none" />
                             {project.beforeAfter && (
-                              <span className="absolute top-3 left-3 px-3 py-1 rounded-lg bg-brand-green/90 text-white text-xs font-medium">Before/After</span>
+                              <span className="absolute top-3 left-3 px-3 py-1 rounded-lg bg-brand-green/90 text-white text-xs font-medium pointer-events-none">Before/After</span>
                             )}
-                            <span className={`absolute top-3 right-3 px-3 py-1 rounded-lg text-white text-xs font-medium ${meta.badgeClass}`}>
+                            <span className={`absolute top-3 right-3 px-3 py-1 rounded-lg text-white text-xs font-medium pointer-events-none ${meta.badgeClass}`}>
                               {meta.badgeLabel}
                             </span>
                           </div>
@@ -208,6 +296,55 @@ export default function Projects() {
           )}
         </div>
       </section>
+
+      {preview.open && (
+        <div
+          className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={closePreview}
+        >
+          <button
+            type="button"
+            className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white px-3 py-2 rounded-lg"
+            onClick={closePreview}
+          >
+            Close
+          </button>
+
+          {preview.images.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="absolute left-3 md:left-8 bg-black/50 hover:bg-black/70 text-white px-3 py-2 rounded-lg"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  prevPreview()
+                }}
+              >
+                Prev
+              </button>
+              <button
+                type="button"
+                className="absolute right-3 md:right-8 bg-black/50 hover:bg-black/70 text-white px-3 py-2 rounded-lg"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  nextPreview()
+                }}
+              >
+                Next
+              </button>
+            </>
+          )}
+
+          <img
+            src={preview.images[preview.index]}
+            alt={`Preview ${preview.index + 1}`}
+            className="max-h-[88vh] max-w-[92vw] object-contain rounded-xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </>
   )
 }

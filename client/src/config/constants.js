@@ -15,27 +15,6 @@ export const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
 export const FALLBACK_PROJECTS = [
   {
-    id: 'cp-01',
-    title: 'Boutique Suite Interior Upgrade',
-    description: 'Completed premium guest-room interior package with custom joinery, warm lighting, and furniture finishing.',
-    type: 'residential',
-    status: 'completed',
-    images: [
-      '/projects/completed-1.svg',
-      '/projects/completed-2.svg',
-      '/projects/completed-3.svg',
-      '/projects/completed-4.svg',
-    ],
-  },
-  {
-    id: 'cp-02',
-    title: 'Greenline Retail Annex',
-    description: 'Commercial extension including steel canopy work, interior partitions, and parking access.',
-    type: 'commercial',
-    status: 'completed',
-    images: ['/projects/completed-2.svg'],
-  },
-  {
     id: 'og-01',
     title: 'Passara Office Complex',
     description: 'Multi-unit office block currently in structural and blockwork phase.',
