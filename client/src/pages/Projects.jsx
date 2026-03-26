@@ -21,6 +21,22 @@ export default function Projects() {
     '/projects/Completed 4.jpeg',
   ]
 
+  const ongoingGalleryImages = [
+    '/projects/Ongoing 01.jpeg',
+    '/projects/Ongoing 02.jpeg',
+    '/projects/Ongoing 03.jpeg',
+    '/projects/Ongoing 04.jpeg',
+    '/projects/Ongoing 05.jpeg',
+    '/projects/Ongoing 06.jpeg',
+    '/projects/Ongoing 07.jpeg',
+    '/projects/Ongoing 08.jpeg',
+    '/projects/Ongoing 09.jpeg',
+    '/projects/Ongoing 10.jpeg',
+    '/projects/Ongoing 11.jpeg',
+    '/projects/Ongoing 12.jpeg',
+    '/projects/Ongoing 13.jpeg',
+  ]
+
   useEffect(() => {
     api.get('/projects')
       .then(setProjects)
@@ -86,7 +102,7 @@ export default function Projects() {
     { key: 'upcoming', items: upcoming },
   ]
 
-  const hasProjectsToShow = filtered.length > 0 || filter === 'all' || filter === 'completed'
+  const hasProjectsToShow = filtered.length > 0 || filter === 'all' || filter === 'completed' || filter === 'ongoing'
 
   const openPreview = (images, index = 0) => {
     if (!images?.length) return
@@ -220,6 +236,15 @@ export default function Projects() {
                     status: 'completed',
                     images: [img],
                   }))
+                  : key === 'ongoing'
+                    ? ongoingGalleryImages.map((img, idx) => ({
+                      id: `ongoing-project-gallery-${idx + 1}`,
+                      title: `Ongoing Project Gallery - View ${idx + 1}`,
+                      description: `Ongoing construction progress image ${idx + 1} of ${ongoingGalleryImages.length}.`,
+                      type: 'commercial',
+                      status: 'ongoing',
+                      images: [img],
+                    }))
                   : items
 
                 if (sectionItems.length === 0) return null
