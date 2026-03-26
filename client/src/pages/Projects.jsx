@@ -37,9 +37,9 @@ export default function Projects() {
     '/projects/Ongoing 13.jpeg',
   ]
 
-  const upcomingGalleryFiles = [
-    '/projects/Upcomming 01.pdf',
-    '/projects/Upcomming 02.pdf',
+  const upcomingGalleryImages = [
+    '/projects/Upcomming 01.jpeg',
+    '/projects/Upcomming 02.jpeg',
   ]
 
   useEffect(() => {
@@ -253,13 +253,13 @@ export default function Projects() {
                       images: [img],
                     }))
                     : key === 'upcoming'
-                      ? upcomingGalleryFiles.map((file, idx) => ({
+                      ? upcomingGalleryImages.map((img, idx) => ({
                         id: `upcoming-project-gallery-${idx + 1}`,
                         title: `Upcoming Project Gallery - View ${idx + 1}`,
-                        description: `Upcoming project drawing ${idx + 1} of ${upcomingGalleryFiles.length}.`,
+                        description: `Upcoming project visual ${idx + 1} of ${upcomingGalleryImages.length}.`,
                         type: 'commercial',
                         status: 'upcoming',
-                        images: [file],
+                        images: [img],
                       }))
                   : items
 
