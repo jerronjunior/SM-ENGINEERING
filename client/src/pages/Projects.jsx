@@ -2,15 +2,9 @@ import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { motion } from 'framer-motion'
 import { HiOutlinePhotograph } from 'react-icons/hi'
-import { api } from '../api/client'
 import SectionHeading from '../components/SectionHeading'
-import { FALLBACK_PROJECTS } from '../config/constants'
-
-const API_BASE = import.meta.env.VITE_API_URL || ''
 
 export default function Projects() {
-  const [projects, setProjects] = useState([])
-  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [preview, setPreview] = useState({ open: false, images: [], index: 0 })
 
@@ -47,49 +41,6 @@ export default function Projects() {
     '/projects/Upcomming 02.pdf',
   ]
 
-  useEffect(() => {
-    api.get('/projects')
-      .then(setProjects)
-      .catch(() => setProjects([]))
-      .finally(() => setLoading(false))
-  }, [])
-
-  const safeProjects = projects.length > 0 ? projects : FALLBACK_PROJECTS
-
-  const normalizeStatus = (project) => {
-    if (project.status === 'completed' || project.status === 'ongoing' || project.status === 'upcoming') {
-      return project.status
-    }
-    return 'completed'
-  }
-
-  const completed = safeProjects.filter((p) => normalizeStatus(p) === 'completed')
-  const ongoing = safeProjects.filter((p) => normalizeStatus(p) === 'ongoing')
-  const upcoming = safeProjects.filter((p) => normalizeStatus(p) === 'upcoming')
-
-  const imageSrc = (project) => {
-    const firstImage = project.images?.[0]
-    if (!firstImage) return null
-    if (firstImage.startsWith('http') || firstImage.startsWith('/projects/')) return firstImage
-    return API_BASE + firstImage
-  }
-
-  const imageList = (project) => {
-    if (!Array.isArray(project.images)) return []
-    return project.images
-      .filter(Boolean)
-      .map((img) => (img.startsWith('http') || img.startsWith('/projects/') ? img : API_BASE + img))
-  }
-
-  const previewList = (project) => {
-    if (Array.isArray(project.previewFiles) && project.previewFiles.length > 0) {
-      return project.previewFiles
-        .filter(Boolean)
-        .map((file) => (file.startsWith('http') || file.startsWith('/projects/') ? file : API_BASE + file))
-    }
-    return imageList(project)
-  }
-
   const isPdf = (src) => typeof src === 'string' && src.toLowerCase().endsWith('.pdf')
 
   const categoryMeta = {
@@ -112,6 +63,41 @@ export default function Projects() {
       badgeLabel: 'Upcoming',
     },
   }
+
+  // Create project items from gallery images
+  const generateProjects = () => {
+    const completed = completedGalleryImages.map((img, idx) => ({
+      id: `completed-room-gallery-${idx + 1}`,
+      title: `Completed Room Interior Gallery - View ${idx + 1}`,
+      description: `Completed room interior image ${idx + 1} of ${completedGalleryImages.length}.`,
+      type: 'residential',
+      status: 'completed',
+      images: [img],
+    }))
+
+    const ongoing = ongoingGalleryImages.map((img, idx) => ({
+      id: `ongoing-project-gallery-${idx + 1}`,
+      title: `Ongoing Project Gallery - View ${idx + 1}`,
+      description: `Ongoing construction progress image ${idx + 1} of ${ongoingGalleryImages.length}.`,
+      type: 'commercial',
+      status: 'ongoing',
+      images: [img],
+    }))
+
+    const upcoming = upcomingGalleryImages.map((img, idx) => ({
+      id: `upcoming-project-gallery-${idx + 1}`,
+      title: `Upcoming Project Gallery - View ${idx + 1}`,
+      description: `Upcoming project file ${idx + 1} of ${upcomingGalleryImages.length}.`,
+      type: 'commercial',
+      status: 'upcoming',
+      images: [img],
+      previewFiles: [upcomingProjectFiles[idx]],
+    }))
+
+    return { completed, ongoing, upcoming }
+  }
+
+  const { completed, ongoing, upcoming } = generateProjects()
 
   const sections = [
     { key: 'completed', items: completed },
@@ -216,7 +202,7 @@ export default function Projects() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           {/* Filter Menu Bar */}
-          {!loading && hasProjectsToShow && (
+          {hasProjectsToShow && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -246,13 +232,7 @@ export default function Projects() {
             </motion.div>
           )}
 
-          {loading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-64 rounded-xl bg-brand-blue animate-pulse" />
-              ))}
-            </div>
-          ) : !hasProjectsToShow ? (
+          {!hasProjectsToShow ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -267,43 +247,14 @@ export default function Projects() {
             <div className="space-y-14">
               {filteredSections.map(({ key, items }) => {
                 const meta = categoryMeta[key]
-                const sectionItems = key === 'completed'
-                  ? completedGalleryImages.map((img, idx) => ({
-                    id: `completed-room-gallery-${idx + 1}`,
-                    title: `Completed Room Interior Gallery - View ${idx + 1}`,
-                    description: `Completed room interior image ${idx + 1} of ${completedGalleryImages.length}.`,
-                    type: 'residential',
-                    status: 'completed',
-                    images: [img],
-                  }))
-                  : key === 'ongoing'
-                    ? ongoingGalleryImages.map((img, idx) => ({
-                      id: `ongoing-project-gallery-${idx + 1}`,
-                      title: `Ongoing Project Gallery - View ${idx + 1}`,
-                      description: `Ongoing construction progress image ${idx + 1} of ${ongoingGalleryImages.length}.`,
-                      type: 'commercial',
-                      status: 'ongoing',
-                      images: [img],
-                    }))
-                    : key === 'upcoming'
-                      ? upcomingGalleryImages.map((img, idx) => ({
-                        id: `upcoming-project-gallery-${idx + 1}`,
-                        title: `Upcoming Project Gallery - View ${idx + 1}`,
-                        description: `Upcoming project file ${idx + 1} of ${upcomingGalleryImages.length}.`,
-                        type: 'commercial',
-                        status: 'upcoming',
-                        images: [img],
-                        previewFiles: [upcomingProjectFiles[idx]],
-                      }))
-                  : items
 
-                if (sectionItems.length === 0) return null
+                if (items.length === 0) return null
 
                 return (
                   <div key={key}>
                     <SectionHeading title={meta.title} />
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {sectionItems.map((project, i) => (
+                      {items.map((project, i) => (
                         <motion.div
                           key={project.id}
                           initial={{ opacity: 0, y: 20 }}
@@ -312,32 +263,14 @@ export default function Projects() {
                           className={`group rounded-2xl overflow-hidden section-card border-l-4 ${meta.borderClass}`}
                         >
                           <div className="aspect-video bg-brand-blue-light relative overflow-hidden">
-                            {imageList(project).length > 1 ? (
-                              <div className="grid grid-cols-2 h-full gap-1 p-1">
-                                {imageList(project).slice(0, 4).map((img, idx) => (
-                                  <button
-                                    key={`${project.id}-${idx}`}
-                                    type="button"
-                                    onClick={() => openPreview(previewList(project), idx)}
-                                    className="w-full h-full"
-                                    aria-label={`Preview ${project.title} image ${idx + 1}`}
-                                  >
-                                    <img
-                                      src={img}
-                                      alt={`${project.title} ${idx + 1}`}
-                                      className="w-full h-full object-cover rounded-md group-hover:scale-[1.02] transition duration-500"
-                                    />
-                                  </button>
-                                ))}
-                              </div>
-                            ) : imageSrc(project) ? (
+                            {project.images[0] ? (
                               <button
                                 type="button"
-                                onClick={() => openPreview(previewList(project), 0)}
+                                onClick={() => openPreview(project.previewFiles || project.images, 0)}
                                 className="w-full h-full"
                                 aria-label={`Preview ${project.title}`}
                               >
-                                {isPdf(imageSrc(project)) ? (
+                                {isPdf(project.images[0]) ? (
                                   <div className="w-full h-full flex items-center justify-center bg-brand-blue/60 text-center px-4">
                                     <div>
                                       <p className="text-white font-semibold">PDF Preview</p>
@@ -346,7 +279,7 @@ export default function Projects() {
                                   </div>
                                 ) : (
                                   <img
-                                    src={imageSrc(project)}
+                                    src={project.images[0]}
                                     alt={project.title}
                                     className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                                   />
@@ -358,9 +291,6 @@ export default function Projects() {
                               </div>
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-brand-blue via-transparent to-transparent opacity-60 pointer-events-none" />
-                            {project.beforeAfter && (
-                              <span className="absolute top-3 left-3 px-3 py-1 rounded-lg bg-brand-green/90 text-white text-xs font-medium pointer-events-none">Before/After</span>
-                            )}
                             <span className={`absolute top-3 right-3 px-3 py-1 rounded-lg text-white text-xs font-medium pointer-events-none ${meta.badgeClass}`}>
                               {meta.badgeLabel}
                             </span>

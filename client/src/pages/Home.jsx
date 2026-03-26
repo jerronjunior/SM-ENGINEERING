@@ -1,10 +1,23 @@
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useState } from 'react'
 import { HiOutlineClipboardList, HiOutlineCurrencyDollar, HiOutlineOfficeBuilding, HiOutlineShieldCheck } from 'react-icons/hi'
 import { COMPANY } from '../config/constants'
 import SectionHeading from '../components/SectionHeading'
 import AnimatedCounter from '../components/AnimatedCounter'
+
+const slides = [
+  '/slide-1.jpg',
+  '/slide-2.jpg',
+  '/slide-3.jpg',
+  '/slide-4.jpg',
+  '/slide-5.jpg',
+  '/slide-6.jpg',
+  '/slide-7.jpg',
+  '/slide-8.jpg',
+  '/slide-9.jpg',
+]
 
 const services = [
   { icon: HiOutlineClipboardList, title: 'House Planning & Design', to: '/services#planning' },
@@ -20,6 +33,15 @@ const whyUs = [
 ]
 
 export default function Home() {
+  const [current, setCurrent] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent(prev => (prev + 1) % slides.length)
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [])
+
   return (
     <>
       <Helmet>
@@ -27,10 +49,33 @@ export default function Home() {
         <meta name="description" content="SM Engineering & Construction - House Planning, Design, Cost Estimation. Residential & Commercial. Free quotations. 1 Year warranty. Passara, Sri Lanka." />
       </Helmet>
 
+      {/* ── HERO ── */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden page-hero">
-        <div className="absolute inset-0 bg-gradient-to-b from-brand-green/15 via-transparent to-brand-blue-dark" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(34,197,94,0.15),transparent)]" />
-        <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-40" style={{ backgroundSize: '64px 64px' }} />
+
+        {/* Slideshow background */}
+        <div className="absolute inset-0 z-0">
+          <AnimatePresence>
+            <motion.img
+              key={current}
+              src={slides[current]}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              initial={{ opacity: 0, scale: 1.06 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              transition={{ duration: 1.2, ease: 'easeInOut' }}
+            />
+          </AnimatePresence>
+          {/* Dark overlay so text stays readable */}
+          <div className="absolute inset-0 bg-black/60" />
+        </div>
+
+        {/* Original gradient / grid overlays */}
+        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-brand-green/10 via-transparent to-brand-blue-dark" />
+        <div className="absolute inset-0 z-[1] bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(34,197,94,0.12),transparent)]" />
+        <div className="absolute inset-0 z-[1] bg-grid-pattern bg-grid opacity-30" style={{ backgroundSize: '64px 64px' }} />
+
+        {/* Hero content */}
         <div className="container mx-auto px-4 relative z-10 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -62,7 +107,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10"
+            className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto mb-10"
           >
             House Planning • Design • Cost Estimation • Structural Drawings
           </motion.p>
@@ -72,16 +117,29 @@ export default function Home() {
             transition={{ delay: 0.4 }}
             className="flex flex-wrap justify-center gap-4"
           >
-            <Link to="/contact" className="btn-primary">
-              Get Free Quotation
-            </Link>
-            <Link to="/services" className="btn-secondary">
-              Our Services
-            </Link>
+            <Link to="/contact" className="btn-primary">Get Free Quotation</Link>
+            <Link to="/services" className="btn-secondary">Our Services</Link>
           </motion.div>
+
+          {/* Dot indicators */}
+          <div className="flex justify-center gap-2 mt-10">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrent(i)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  i === current
+                    ? 'bg-brand-green-accent w-6'
+                    : 'w-2 bg-white/40 hover:bg-white/70'
+                }`}
+                aria-label={`Go to slide ${i + 1}`}
+              />
+            ))}
+          </div>
         </div>
       </section>
 
+      {/* ── WHO WE ARE ── */}
       <section className="py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-brand-blue/30 via-transparent to-transparent" />
         <div className="container mx-auto px-4 relative z-10">
@@ -102,6 +160,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── SERVICES ── */}
       <section className="py-24 bg-brand-blue/30">
         <div className="container mx-auto px-4">
           <SectionHeading title="Our Services" subtitle="From planning to execution, we support your project at every step." />
@@ -130,6 +189,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── WHY CHOOSE US ── */}
       <section className="py-24">
         <div className="container mx-auto px-4">
           <SectionHeading title="Why Choose Us" subtitle="Quality, transparency, and support you can trust." />
@@ -156,6 +216,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── STATS ── */}
       <section className="py-24 bg-brand-blue/30">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8">
@@ -180,6 +241,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── CTA ── */}
       <section className="py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-brand-green/15 via-brand-green/5 to-brand-green/15" />
         <div className="absolute inset-0 border-y border-brand-green/20" />
@@ -206,9 +268,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="flex flex-wrap justify-center gap-4"
           >
-            <Link to="/contact" className="btn-primary">
-              Contact Us
-            </Link>
+            <Link to="/contact" className="btn-primary">Contact Us</Link>
             <a href={`https://wa.me/${COMPANY.whatsapp}`} target="_blank" rel="noopener noreferrer" className="btn-secondary">
               WhatsApp
             </a>
