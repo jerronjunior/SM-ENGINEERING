@@ -63,13 +63,9 @@ export default function Projects() {
     return 'completed'
   }
 
-  const filtered = filter === 'all'
-    ? safeProjects
-    : safeProjects.filter((p) => normalizeStatus(p) === filter)
-
-  const completed = filtered.filter((p) => normalizeStatus(p) === 'completed')
-  const ongoing = filtered.filter((p) => normalizeStatus(p) === 'ongoing')
-  const upcoming = filtered.filter((p) => normalizeStatus(p) === 'upcoming')
+  const completed = safeProjects.filter((p) => normalizeStatus(p) === 'completed')
+  const ongoing = safeProjects.filter((p) => normalizeStatus(p) === 'ongoing')
+  const upcoming = safeProjects.filter((p) => normalizeStatus(p) === 'upcoming')
 
   const imageSrc = (project) => {
     const firstImage = project.images?.[0]
@@ -123,7 +119,11 @@ export default function Projects() {
     { key: 'upcoming', items: upcoming },
   ]
 
-  const hasProjectsToShow = filtered.length > 0 || filter === 'all' || filter === 'completed' || filter === 'ongoing' || filter === 'upcoming'
+  const filteredSections = filter === 'all'
+    ? sections
+    : sections.filter(section => section.key === filter)
+
+  const hasProjectsToShow = completed.length > 0 || ongoing.length > 0 || upcoming.length > 0
 
   const openPreview = (images, index = 0) => {
     if (!images?.length) return
@@ -215,17 +215,36 @@ export default function Projects() {
 
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap gap-2 mb-10">
-            {['all', 'completed', 'ongoing', 'upcoming'].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-5 py-2.5 rounded-xl text-sm font-medium capitalize transition-all duration-300 ${filter === f ? 'bg-brand-green text-white shadow-glow' : 'bg-brand-blue/80 border border-brand-green/30 text-gray-400 hover:text-white hover:border-brand-green/50'}`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
+          {/* Filter Menu Bar */}
+          {!loading && hasProjectsToShow && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-12 flex flex-wrap gap-3 justify-center"
+            >
+              {[
+                { value: 'all', label: 'All' },
+                { value: 'completed', label: 'Completed' },
+                { value: 'ongoing', label: 'Ongoing' },
+                { value: 'upcoming', label: 'Upcoming' },
+              ].map((btn) => (
+                <motion.button
+                  key={btn.value}
+                  type="button"
+                  onClick={() => setFilter(btn.value)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`px-6 py-2.5 rounded-lg font-medium transition-all capitalize ${
+                    filter === btn.value
+                      ? 'bg-brand-green text-white shadow-lg shadow-brand-green/50'
+                      : 'bg-brand-blue/30 text-gray-300 hover:bg-brand-blue/50 hover:text-white'
+                  }`}
+                >
+                  {btn.label}
+                </motion.button>
+              ))}
+            </motion.div>
+          )}
 
           {loading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -246,7 +265,7 @@ export default function Projects() {
             </motion.div>
           ) : (
             <div className="space-y-14">
-              {sections.map(({ key, items }) => {
+              {filteredSections.map(({ key, items }) => {
                 const meta = categoryMeta[key]
                 const sectionItems = key === 'completed'
                   ? completedGalleryImages.map((img, idx) => ({

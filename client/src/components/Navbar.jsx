@@ -16,6 +16,16 @@ export default function Navbar() {
   const [open, setOpen] = useState(false)
   const location = useLocation()
 
+  const isActive = (to) => {
+    if (to.includes('?')) {
+      return `${location.pathname}${location.search}` === to
+    }
+    if (to === '/projects') {
+      return location.pathname === '/projects' && !location.search
+    }
+    return location.pathname === to
+  }
+
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
@@ -36,7 +46,7 @@ export default function Navbar() {
             <li key={to}>
               <Link
                 to={to}
-                className={`text-sm font-medium transition-colors relative ${location.pathname === to ? 'text-brand-green-accent' : 'text-gray-300 hover:text-white'}`}
+                className={`text-sm font-medium transition-colors relative ${isActive(to) ? 'text-brand-green-accent' : 'text-gray-300 hover:text-white'}`}
               >
                 {label}
               </Link>
@@ -68,7 +78,7 @@ export default function Navbar() {
                   <Link
                     to={to}
                     onClick={() => setOpen(false)}
-                    className={`block py-2 font-medium ${location.pathname === to ? 'text-brand-green-accent' : 'text-gray-300'}`}
+                    className={`block py-2 font-medium ${isActive(to) ? 'text-brand-green-accent' : 'text-gray-300'}`}
                   >
                     {label}
                   </Link>
