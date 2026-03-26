@@ -37,6 +37,11 @@ export default function Projects() {
     '/projects/Ongoing 13.jpeg',
   ]
 
+  const upcomingGalleryFiles = [
+    '/projects/Upcomming 01.pdf',
+    '/projects/Upcomming 02.pdf',
+  ]
+
   useEffect(() => {
     api.get('/projects')
       .then(setProjects)
@@ -75,6 +80,8 @@ export default function Projects() {
       .map((img) => (img.startsWith('http') || img.startsWith('/projects/') ? img : API_BASE + img))
   }
 
+  const isPdf = (src) => typeof src === 'string' && src.toLowerCase().endsWith('.pdf')
+
   const categoryMeta = {
     completed: {
       title: 'Completed Projects',
@@ -102,7 +109,7 @@ export default function Projects() {
     { key: 'upcoming', items: upcoming },
   ]
 
-  const hasProjectsToShow = filtered.length > 0 || filter === 'all' || filter === 'completed' || filter === 'ongoing'
+  const hasProjectsToShow = filtered.length > 0 || filter === 'all' || filter === 'completed' || filter === 'ongoing' || filter === 'upcoming'
 
   const openPreview = (images, index = 0) => {
     if (!images?.length) return
@@ -245,6 +252,15 @@ export default function Projects() {
                       status: 'ongoing',
                       images: [img],
                     }))
+                    : key === 'upcoming'
+                      ? upcomingGalleryFiles.map((file, idx) => ({
+                        id: `upcoming-project-gallery-${idx + 1}`,
+                        title: `Upcoming Project Gallery - View ${idx + 1}`,
+                        description: `Upcoming project drawing ${idx + 1} of ${upcomingGalleryFiles.length}.`,
+                        type: 'commercial',
+                        status: 'upcoming',
+                        images: [file],
+                      }))
                   : items
 
                 if (sectionItems.length === 0) return null
@@ -287,11 +303,20 @@ export default function Projects() {
                                 className="w-full h-full"
                                 aria-label={`Preview ${project.title}`}
                               >
-                                <img
-                                  src={imageSrc(project)}
-                                  alt={project.title}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-                                />
+                                {isPdf(imageSrc(project)) ? (
+                                  <div className="w-full h-full flex items-center justify-center bg-brand-blue/60 text-center px-4">
+                                    <div>
+                                      <p className="text-white font-semibold">PDF Preview</p>
+                                      <p className="text-gray-300 text-sm mt-1">Click to open drawing</p>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <img
+                                    src={imageSrc(project)}
+                                    alt={project.title}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                                  />
+                                )}
                               </button>
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-500 bg-brand-blue/50">
@@ -362,12 +387,21 @@ export default function Projects() {
             </>
           )}
 
-          <img
-            src={preview.images[preview.index]}
-            alt={`Preview ${preview.index + 1}`}
-            className="max-h-[88vh] max-w-[92vw] object-contain rounded-xl shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
+          {isPdf(preview.images[preview.index]) ? (
+            <iframe
+              src={preview.images[preview.index]}
+              title={`Preview ${preview.index + 1}`}
+              className="h-[88vh] w-[92vw] rounded-xl shadow-2xl bg-white"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <img
+              src={preview.images[preview.index]}
+              alt={`Preview ${preview.index + 1}`}
+              className="max-h-[88vh] max-w-[92vw] object-contain rounded-xl shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
         </div>
       )}
     </>
