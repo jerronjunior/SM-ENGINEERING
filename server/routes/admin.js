@@ -15,6 +15,21 @@ const ADMIN_SETTINGS_COLLECTION = 'settings'
 const ADMIN_SETTINGS_DOC = 'adminAuth'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const localAuthPath = path.join(__dirname, '../config/admin-auth.json')
+const localContactsPath = path.join(__dirname, '../config/contacts.json')
+
+const readLocalContacts = () => {
+  try {
+    if (!fs.existsSync(localContactsPath)) return []
+    const data = JSON.parse(fs.readFileSync(localContactsPath, 'utf8'))
+    return Array.isArray(data) ? data : []
+  } catch {
+    return []
+  }
+}
+
+const writeLocalContacts = (contacts) => {
+  fs.writeFileSync(localContactsPath, JSON.stringify(contacts, null, 2), 'utf8')
+}
 
 const hashPassword = (password, salt = crypto.randomBytes(16).toString('hex')) => {
   const hash = crypto.scryptSync(password, salt, 64).toString('hex')
@@ -23,17 +38,39 @@ const hashPassword = (password, salt = crypto.randomBytes(16).toString('hex')) =
 
 const verifyPassword = (password, encoded) => {
   const [salt, originalHash] = (encoded || '').split(':')
-  if (!salt || !originalHash) return false
-  const derivedHash = crypto.scryptSync(password, salt, 64).toString('hex')
-  return crypto.timingSafeEqual(Buffer.from(derivedHash, 'hex'), Buffer.from(originalHash, 'hex'))
+  const hexPattern = /^[a-f0-9]+$/i
+  if (!salt || !originalHash || !hexPattern.test(salt) || !hexPattern.test(originalHash)) return false
+
+  try {
+    const derivedHash = crypto.scryptSync(password, salt, 64).toString('hex')
+    const derivedBuffer = Buffer.from(derivedHash, 'hex')
+    const originalBuffer = Buffer.from(originalHash, 'hex')
+    if (derivedBuffer.length === 0 || originalBuffer.length === 0) return false
+    if (derivedBuffer.length !== originalBuffer.length) return false
+    return crypto.timingSafeEqual(derivedBuffer, originalBuffer)
+  } catch {
+    return false
+  }
+}
+
+const hasValidPasswordHashFormat = (encoded) => {
+  const [salt, hash] = (encoded || '').split(':')
+  const hexPattern = /^[a-f0-9]+$/i
+  if (!salt || !hash) return false
+  if (!hexPattern.test(salt) || !hexPattern.test(hash)) return false
+  if (salt.length % 2 !== 0 || hash.length % 2 !== 0) return false
+  return true
 }
 
 const getAdminAuthConfig = async () => {
   try {
     const doc = await db.collection(ADMIN_SETTINGS_COLLECTION).doc(ADMIN_SETTINGS_DOC).get()
     const data = doc.data()
-    if (doc.exists && data?.email && data?.passwordHash) {
+    if (doc.exists && data?.email && data?.passwordHash && hasValidPasswordHashFormat(data.passwordHash)) {
       return { email: data.email, passwordHash: data.passwordHash }
+    }
+    if (doc.exists && data?.passwordHash && !hasValidPasswordHashFormat(data.passwordHash)) {
+      console.warn('Ignoring invalid admin password hash format in Firestore, using env fallback.')
     }
   } catch (err) {
     console.warn('Failed to load admin auth config from Firestore, using env fallback.', err?.message)
@@ -42,8 +79,11 @@ const getAdminAuthConfig = async () => {
   try {
     if (fs.existsSync(localAuthPath)) {
       const localData = JSON.parse(fs.readFileSync(localAuthPath, 'utf8'))
-      if (localData?.email && localData?.passwordHash) {
+      if (localData?.email && localData?.passwordHash && hasValidPasswordHashFormat(localData.passwordHash)) {
         return { email: localData.email, passwordHash: localData.passwordHash }
+      }
+      if (localData?.passwordHash && !hasValidPasswordHashFormat(localData.passwordHash)) {
+        console.warn('Ignoring invalid local admin password hash format, using env fallback.')
       }
     }
   } catch (err) {
@@ -106,12 +146,19 @@ const parseToken = (token) => {
   if (!encodedPayload || !signature) return null
 
   const expectedSignature = crypto.createHmac('sha256', ADMIN_TOKEN_SECRET).update(encodedPayload).digest('base64url')
-  const isValid = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))
+  const signatureBuffer = Buffer.from(signature)
+  const expectedSignatureBuffer = Buffer.from(expectedSignature)
+  if (signatureBuffer.length !== expectedSignatureBuffer.length) return null
+  const isValid = crypto.timingSafeEqual(signatureBuffer, expectedSignatureBuffer)
   if (!isValid) return null
 
-  const payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString())
-  if (!payload?.email || !payload?.expiresAt || Date.now() > payload.expiresAt) return null
-  return payload
+  try {
+    const payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString())
+    if (!payload?.email || !payload?.expiresAt || Date.now() > payload.expiresAt) return null
+    return payload
+  } catch {
+    return null
+  }
 }
 
 router.post('/login', async (req, res) => {
@@ -208,8 +255,9 @@ router.get('/contacts', authMiddleware, async (req, res) => {
     })
     res.json(contacts)
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to fetch contacts' })
+    console.warn('Failed to fetch contacts from Firestore, using local fallback.', err?.message)
+    const contacts = readLocalContacts().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    res.json(contacts)
   }
 })
 
@@ -218,8 +266,15 @@ router.patch('/contacts/:id/read', authMiddleware, async (req, res) => {
     await db.collection('contacts').doc(req.params.id).update({ read: true })
     res.json({ message: 'Marked as read' })
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to update' })
+    console.warn('Failed to update contact in Firestore, using local fallback.', err?.message)
+    const contacts = readLocalContacts()
+    const index = contacts.findIndex((c) => c.id === req.params.id)
+    if (index === -1) {
+      return res.status(404).json({ error: 'Message not found' })
+    }
+    contacts[index] = { ...contacts[index], read: true }
+    writeLocalContacts(contacts)
+    res.json({ message: 'Marked as read' })
   }
 })
 

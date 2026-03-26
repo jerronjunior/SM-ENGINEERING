@@ -39,18 +39,26 @@ export default function AdminDashboard() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [c, p, b] = await Promise.all([
+      const [contactsResult, projectsResult, blogResult] = await Promise.allSettled([
         api.get('/admin/contacts'),
         api.get('/projects'),
         api.get('/blog'),
       ])
-      setContacts(c)
-      setProjects(p)
-      setPosts(b)
-    } catch (err) {
-      if (err.message === 'Unauthorized') {
+
+      if (contactsResult.status === 'fulfilled') {
+        setContacts(contactsResult.value)
+      } else if (contactsResult.reason?.message === 'Unauthorized') {
         localStorage.removeItem('adminToken')
         navigate('/admin')
+        return
+      }
+
+      if (projectsResult.status === 'fulfilled') {
+        setProjects(projectsResult.value)
+      }
+
+      if (blogResult.status === 'fulfilled') {
+        setPosts(blogResult.value)
       }
     } finally {
       setLoading(false)
