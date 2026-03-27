@@ -4,8 +4,6 @@ import { motion } from 'framer-motion'
 import { HiOutlineFolder, HiOutlineDocumentText, HiOutlineMail, HiOutlineLogout, HiOutlinePencil, HiOutlineTrash, HiOutlineKey } from 'react-icons/hi'
 import { api } from '../../api/client'
 
-const API_BASE = import.meta.env.VITE_API_URL || ''
-
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const [tab, setTab] = useState('contacts')
