@@ -11,8 +11,6 @@ import Contact from './pages/Contact'
 import PrivacyPolicy from './pages/legal/PrivacyPolicy'
 import TermsConditions from './pages/legal/TermsConditions'
 import CookiePolicy from './pages/legal/CookiePolicy'
-import AdminLogin from './pages/admin/AdminLogin'
-import AdminDashboard from './pages/admin/AdminDashboard'
 import WhatsAppButton from './components/WhatsAppButton'
 import Chatbot from './components/Chatbot'
 
@@ -38,8 +36,6 @@ function App() {
           <Route path="terms-conditions" element={<TermsConditions />} />
           <Route path="cookie-policy" element={<CookiePolicy />} />
         </Route>
-        <Route path="/admin" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
       <WhatsAppButton />
       <Chatbot />
